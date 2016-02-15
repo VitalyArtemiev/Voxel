@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="C:\Lazarus\fpc\2.6.4\bin\i386-win32\fpc.exe" Date="1211726250"/>
+  <Params Value=" -MObjFPC -Scaghi -CirotR -O1 -gw2 -godwarfsets -gl -gh -Xg -l -vewnhibq &quot;-FiC:\Program Files\FPC\Projects\Voxel\lib\i386-win32&quot; &quot;-FuC:\Program Files\FPC\Projects\Voxel\Pascal-SDL-2-Headers&quot; &quot;-FuC:\Program Files\FPC\Projects\Voxel\&quot; &quot;-FUC:\Program Files\FPC\Projects\Voxel\lib\i386-win32\&quot; vx.lpr"/>
+</CONFIG>
