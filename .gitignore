@@ -52,3 +52,7 @@ Temporary Items
 *.ppu
 *.o
 *.dbg
+*.compiled
+
+backup
+lib
