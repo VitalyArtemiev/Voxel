@@ -24,7 +24,7 @@ type
     function Open(Title: ansistring; FullScreen: boolean = true;
       x: integer = 0; y: integer = 0; width: integer = 0; height: integer = 0): integer;
     function InitGL: integer;
-    procedure Update;
+    procedure Update; inline;
     destructor Destroy; override;
   end;
 
@@ -94,9 +94,9 @@ end;
 function tGameWindow.InitGL: integer;
 begin
   VisibleRange:= 1000;
-  Load_gl_version_2_1;
+  Load_gl_version_3_1;
   glClearColor(0.0, 0.0, 0.0, 1);
-  glViewport( 0, 0, XRes, YRes);
+  glViewport(0, 0, XRes, YRes);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity;
   gluPerspective(FOV, XRes/YRes, 0.01, VisibleRange);
@@ -107,13 +107,14 @@ begin
   glRotatef(0,1,0,0);
   glRotatef(0,0,1,0);
   glRotatef(0,0,0,1);  }
-  glPolygonMode(GL_FRONT, GL_FILL);
+  glPolygonMode(GL_FRONT, GL_LINE);
   glClearDepth(VisibleRange);
   //glEnable(GL_BLEND);
   //glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
  { if Culling then          glFrontFace(GL_CCW/cw)  перед по/против час. стрелки
   begin}
     glFrontFace(GL_CCW);
@@ -125,8 +126,8 @@ end;
 
 procedure tGameWindow.Update;
 begin
+  //SDL_UpdateWindowSurface(WindowHandle);  //this causes flicker
   SDL_GL_SwapWindow(WindowHandle);
-  //SDL_UpdateWindowSurface(WindowHandle);
 end;
 
 destructor tGameWindow.Destroy;

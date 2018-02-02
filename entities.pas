@@ -5,17 +5,15 @@ unit entities;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, BaseTypes;
 
 type
-
-  rVec3 = record
-    x, y, z: single;
-  end;
 
   rProjectileProperties = record
     Mass, MuzzleVelocity, Drag, ArmorPiercing, Penetration: Single;
   end;
+
+  tEntityID = longword;
 
   { tVectorContainer }
 
@@ -34,8 +32,29 @@ type
     procedure Clear;
   end;
 
-  tEntity = class                 //coordinates, orientation
-    c, o: rVec3;
+  eEventKind = (eArrival, eActivityFinish);
+
+  pEvent = ^rEvent;
+
+  { tEntity }
+
+  tEntity = class
+    c,        //coordinates
+    o: rVec3; //orientation
+    procedure GenerateEvent(Event: pEvent; Owner: tEntity);
+  end;
+
+  rEvent = record
+    Time: tDateTime;
+    Owner: tEntity;
+    Kind: eEventKind;
+    Next: pEvent;
+  end;
+
+  tLocation = class
+    //owner?//
+    //Voxel: tVoxel;
+    Coords: rVec3;
   end;
 
   tStructure = class(tEntity)
@@ -46,7 +65,8 @@ type
   { tMovableEntity }
 
   tMovableEntity = class(tEntity)
-    v: rVec3;                     //velocity
+    ID: tEntityID;
+    v: rVec3;   //velocity
     procedure Kinemate;
   end;
 
@@ -54,8 +74,8 @@ type
     Properties: ^rProjectileProperties;
   end;
 
-  tCharacter = class(tMovableEntity)
-    Seed: longword;
+  tCamera = class(tMovableEntity)
+
   end;
 
   tGroup = class
@@ -63,6 +83,13 @@ type
   end;
 
 implementation
+
+{ tEntity }
+
+procedure tEntity.GenerateEvent(Event: pEvent; Owner: tEntity);
+begin
+
+end;
 
 { tVectorContainer }
 

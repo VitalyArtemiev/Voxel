@@ -1,0 +1,99 @@
+object Form1: TForm1
+  Left = 250
+  Height = 631
+  Top = 165
+  Width = 624
+  Caption = 'Form1'
+  ClientHeight = 631
+  ClientWidth = 624
+  OnCreate = FormCreate
+  LCLVersion = '1.8.0.6'
+  object ALeft: TArrow
+    AnchorSideTop.Control = AUp
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = AUp
+    Left = 248
+    Height = 27
+    Top = 570
+    Width = 32
+    Anchors = [akTop, akRight]
+    Constraints.MinHeight = 8
+    Constraints.MinWidth = 8
+  end
+  object ARight: TArrow
+    AnchorSideLeft.Control = AUp
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = ALeft
+    Left = 317
+    Height = 27
+    Top = 570
+    Width = 27
+    ArrowType = atRight
+    Constraints.MinHeight = 8
+    Constraints.MinWidth = 8
+  end
+  object AUp: TArrow
+    Left = 280
+    Height = 27
+    Top = 543
+    Width = 37
+    Anchors = [akLeft, akBottom]
+    ArrowType = atUp
+    Constraints.MinHeight = 8
+    Constraints.MinWidth = 8
+  end
+  object ADown: TArrow
+    AnchorSideLeft.Control = AUp
+    AnchorSideTop.Control = ALeft
+    AnchorSideTop.Side = asrBottom
+    Left = 280
+    Height = 27
+    Top = 597
+    Width = 37
+    ArrowType = atDown
+    Constraints.MinHeight = 8
+    Constraints.MinWidth = 8
+  end
+  object PaintBox: TPaintBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = AUp
+    Left = 0
+    Height = 543
+    Top = 0
+    Width = 624
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    OnClick = PaintBoxClick
+  end
+  object TrackBar1: TTrackBar
+    Left = 32
+    Height = 25
+    Top = 570
+    Width = 180
+    Position = 0
+    Anchors = [akLeft, akBottom]
+    TabOrder = 0
+  end
+  object SpinEdit1: TSpinEdit
+    Left = 482
+    Height = 23
+    Top = 562
+    Width = 83
+    Anchors = [akLeft, akBottom]
+    TabOrder = 1
+  end
+  object Label1: TLabel
+    AnchorSideLeft.Control = SpinEdit1
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = SpinEdit1
+    Left = 573
+    Height = 15
+    Top = 562
+    Width = 34
+    BorderSpacing.Left = 8
+    Caption = 'Label1'
+    ParentColor = False
+  end
+end

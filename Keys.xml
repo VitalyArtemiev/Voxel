@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Keys.xml kek="1,5" kek1="1,5" keks="500" keks1="500" kreks="peks" kreks1="peks">
+  <keyb action="aRight" keyprim="c" keysec="a"/>
+  <keyb action="aRight" keyprim="c" keysec="a"/>
+  <keyb action="aRight" keyprim="c" keysec="a"/>
+  <keyb action="aRight" keyprim="c" keysec="q"/>
+  <keyb action="aRight" keyprim="c" keysec="q"/>
+  <keyd action="aLeft" keyprim="d" keysec="a"/>
+  <keyd action="aLeft" keyprim="d" keysec="a"/>
+  <keyd action="aLeft" keyprim="d" keysec="a"/>
+  <keyd action="aLeft" keyprim="d" keysec="q"/>
+  <keyd action="aLeft" keyprim="d" keysec="q"/>
+</Keys.xml>

@@ -1,0 +1,44 @@
+Opening file init.cfg
+Loading player profile DefaultProfile.xml
+Read string aLeft
+Read string scA
+Read string aRight
+Read string scD
+Read string aForward
+Read string scW
+Read string aBackward
+Read string scS
+Read string aUpward
+Read string scSPACE
+Read string aDownward
+Read string scLCTRL
+Read string aPitchDown
+Read string scR
+Read string aPitchUp
+Read string scF
+Read string aYawLeft
+Read string scZ
+Read string aYawRight
+Read string scX
+Read string aRollLeft
+Read string scQ
+Read string aRollRight
+Read string scE
+mousesens
+Entered Main Loop
+Entered Menu
+Left Menu
+Setting up world
+Voxels generated: 5461
+Paused
+Unpaused
+1820638164
+1820638164
+1820638164
+Paused
+Unpaused
+Paused
+Unpaused
+Destroying world
+Freeing world
+Left Main Loop

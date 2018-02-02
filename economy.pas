@@ -5,23 +5,9 @@ unit Economy;
 interface
 
 uses
-  Classes, SysUtils, Entities{, Character,};
+  Classes, SysUtils, CustomTypes, Entities, Goods, Character, Voxel;
 
 type
-  monetary = longword;
-  quantative = longword;
-  temporal = qword;
-
-  eGoodKind = (gWood, gStone, gCoal, gFood, gMetal, gWeapon, gAmmunition, Building); //...
-
-  pGood = ^rGood;
-
-  rGood = record
-    Kind: eGoodKind;
-    BaseCost: monetary;
-  end;
-
-  tCharacter = class(tMovableEntity);
 
   { rOffer }
 
@@ -50,15 +36,40 @@ type
   { tEconomicHub }
 
   tEconomicHub = class
+    Location: tLocation;
+    BillBoard: tBillBoard;
+    Characters: tCharContainer;
+
     GDP: longword;
     ExportGoods, ImportGoods, ProducedGoods: array of rGoodTrack;
-    BillBoard: tBillBoard;
+
+    constructor Create(Voxel: tVoxel);
+    destructor Destroy; override;
     procedure CalcSupplyDemand;
+  end;
+
+  tEconomicRoute = class
+    Hub1, Hub2: tEconomicHub;
+    Length: longword;
   end;
 
 implementation
 
 { tEconomicHub }
+
+constructor tEconomicHub.Create(Voxel: tVoxel);
+begin
+  Location:= tLocation.Create;
+  //Location.Voxel:= Voxel;
+  BillBoard:= tBillBoard.Create;
+ // Location.Coords:=;
+end;
+
+destructor tEconomicHub.Destroy;
+begin
+  Location.Destroy;
+  BillBoard.Destroy;
+end;
 
 procedure tEconomicHub.CalcSupplyDemand;
 begin

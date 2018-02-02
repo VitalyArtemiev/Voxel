@@ -5,39 +5,49 @@ unit World;
 interface
 
 uses
-  Classes, SysUtils, Voxel, Economy, GL, GLext, Entities;
+  Classes, SysUtils, BaseTypes, Voxel, Economy, GL, GLext, Entities, Character;
 
 type
   spatial = longword;
 
-
   { tWorld }
 
   tWorld = class
-    RootVoxel: tVoxel;
+    Voxels: tVoxelContainer;
+    //RootVoxel: tVoxel; //absolute Voxels.RootVoxel;
+
+    Hubs: array of tEconomicHub;
+    Vicinity: tCharContainer;
+
     Vertices: array of rVec3;
     Indices: array of GLUInt;
-    IndexCount: array of GLsizei;   //for multidraw
-    IndexOffset: array of pointer;
+    //IndexCount: array of GLsizei;   //for multidraw
+   // IndexOffset: array of pointer;
     Counter: longword;
     VertexBuffer, IndexBuffer: GLUInt;
     VoxelCount: longword;
     Extent: single;
-    Hubs: tEconomicHub;
+
     WorldSeed: longword;
     Wireframe: boolean;
-    CameraPosition, CameraDirection: rVec3;
+    Camera: tCamera;
     UI3DListID, WireFrameListID: longword;
 
+  private
+    procedure GenerateHubs;
+
+  public
     constructor Load(FileName: string);
+    constructor LoadHM(FileName: string);
     constructor CreateNew(Seed: longword);
-    procedure SetHeightVoxel(i, j: longword; h: single);
+
     function GetVoxel(x, y, z: single; c1, c2: longword; MaxOrder: longword = 0): tVoxel;
     function Generate(Voxel: tVoxel): longint;
     procedure ListVoxel(Voxel: tVoxel; cx, cy, cz: single);
     procedure PassVoxels;
-    procedure RenderVoxel(Voxel: tVoxel);
+
     procedure Render;
+
     procedure Save(FileName: string);
     destructor Destroy; override;
   end;
@@ -47,33 +57,74 @@ implementation
 uses
   math, Utility;
 
+const
+  HubVoxelOrder = 3;
+  HubCount = 2;
+
 { tWorld }
 
+procedure tWorld.GenerateHubs;
+var
+   i, j: integer;
+   cv: tVoxel;
+begin
+  for i:= 1 to HubCount do
+  begin
+    cv:= Voxels.RootVoxel;
+
+    while cv.Order <> HubVoxelOrder do
+    begin
+      cv:= cv.Children[eVoxelPos(srand(integer(high(eVoxelPos)), WorldSeed + Counter))];
+      if cv = nil then
+        cv:= Voxels.RootVoxel;
+      inc(Counter);
+    end;
+    setlength(Hubs, length(Hubs) + 1);
+    Hubs[high(Hubs)]:= tEconomicHub.Create(cv);
+  end;
+end;
+
 constructor tWorld.Load(FileName: string);
+var
+   Result: integer;
+begin
+  Voxels:= tVoxelContainer.Create;
+  Result:= Voxels.Load(FileName, lWhole);
+  if Result <> 0 then
+    WriteLog(emNoF);
+  {with Voxels do
+  begin
+    RootVoxel:= LoadBlock(0, DefaultBlockDepth);
+  end; }
+end;
+
+constructor tWorld.LoadHM(FileName: string);
 var
   fs: tFileStream;
   i, j, k, l: longword;
   hm: array of array of single;
   d: single;
 begin
-  VoxelFidelity:= 11;
+  Voxels:= tVoxelContainer.Create;
+
+  VoxelFidelity:= 10;
   Extent:= MinVoxelDim * power(2, VoxelFidelity);
   l:= round(power(2, VoxelFidelity));
   VoxelCount:= l * l;
   setlength(hm, l, l);
   setlength(Vertices, l * l);
   setlength(Indices, (l - 1) * (l - 1) * 6);
-  setlength(IndexCount, l);
+  {setlength(IndexCount, l);
   setlength(IndexOffset, l);
   for i:= 0 to high(IndexCount) do
   begin
     IndexCount[i]:= l;
     IndexOffset[i]:= nil;
-  end;
+  end;  }
 
-  RootVoxel:= tVoxel.Create(nil);
+  Voxels.RootVoxel:= tVoxel.Create(nil);
   //writelog(strf(RootVoxel.InstanceSize));
-  d:= power(2, VoxelFidelity - RootVoxel.Order) / 2;
+  d:= power(2, VoxelFidelity - Voxels.RootVoxel.Order) / 2;
 
   FileName+= '.hm';
   fs:= TFileStream.Create(FileName, fmOpenRead);
@@ -90,7 +141,6 @@ begin
 
   k:= 0;
 
-
     for j:= 0 to l - 2 do
     begin
       for i:= 0 to l - 1 do
@@ -102,40 +152,34 @@ begin
       end;
     end;
 
-    //glEnableClientState(GL_VERTEX_ARRAY);
-
-    glGenBuffers(1, @VertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, length(Vertices) * sizeof(rVec3), PGLVoid(Vertices), GL_STATIC_DRAW);
-
-    glGenBuffers(1, @IndexBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, length(Indices) * sizeof(GLuint), PGLVoid(Indices), GL_STATIC_DRAW);
-   // PassVoxels;
-    //glDisableClientState(GL_VERTEX_ARRAY);
     WriteLog('Voxels loaded: ' + strf(VoxelCount));
+
+    GenerateHubs;
+    Camera:= tCamera.Create;
 end;
 
 constructor tWorld.CreateNew(Seed: longword);
+var
+  l: longword;
 begin
   WorldSeed:= Seed;
-  VoxelFidelity:= 7;
+  VoxelFidelity:= 6;
+  l:= round(power(2, VoxelFidelity));
+
+  setlength(Vertices, l * l * l);
+  setlength(Indices, l * l * l);
+
   Extent:= MinVoxelDim * power(2, VoxelFidelity);
-  RootVoxel:= tVoxel.Create(nil);
-  RootVoxel.Order:= 0;
+  Voxels:= tVoxelContainer.Create;
+  Voxels.RootVoxel:= tVoxel.Create(nil);
+  Voxels.RootVoxel.Order:= 0;
 
   VoxelCount:= 0;
-  Generate(RootVoxel);
+  Counter:= 0;
+  Generate(Voxels.RootVoxel);
+
   WriteLog('Voxels generated: ' + strf(VoxelCount));
-end;
-
-procedure tWorld.SetHeightVoxel(i, j: longword; h: single);
-var
-  Voxel: tVoxel;
-  d: single;
-begin
-  //d:= MinVoxelDim * power(2, VoxelFidelity - Order) / 2;
-
+  Camera:= tCamera.Create;
 end;
 
 function tWorld.GetVoxel(x, y, z: single; c1, c2: longword; MaxOrder: longword = 0): tVoxel;
@@ -144,7 +188,7 @@ var
   d, cx, cy, cz: single;
   i: integer;
 begin
-  Result:= RootVoxel;
+  Result:= Voxels.RootVoxel;
   cx:= 0; //center of current voxel
   cy:= 0;
   cz:= 0;
@@ -152,7 +196,7 @@ begin
   with Result do
     for i:= 0 to VoxelFidelity - 1 do
     begin
-      d:= MinVoxelDim * power(2, VoxelFidelity - Order) / 4;
+      d:= MinVoxelDim * power(2, VoxelFidelity - Order - 2) {/ 4};
       if z < cz then
       begin
         cz-= d;
@@ -218,10 +262,10 @@ begin
         end;
       end;
 
-      if Child[Next] = nil then
-        Child[Next]:= tVoxel.Create(Result);
+      if Children[Next] = nil then
+        Children[Next]:= tVoxel.Create(Result);
 
-      Result:= Child[Next];
+      Result:= Children[Next];
     end;
 
   Vertices[c1].x:= x;    //excess
@@ -244,24 +288,24 @@ begin
     //WriteLog('Order ' + strf(Order));
     if Order = VoxelFidelity then
     begin
+     { for i:= low(eVoxelPos) to high(eVoxelPos) do
+        writelog(strf(longword(pointer(Children[i]))));  }
       Result:= 0;
       exit;
     end;
 
     Result:= 0;
-    for i:= BNW to TSE do           //change to iterative
+    for i:= low(eVoxelPos) to TSW do           //change to iterative
     begin
-      //WriteLog('i ' + strf(longint(i)));
-      //ChildHeight:= power(2, VoxelFidelity - Voxel.Order);
-      if srand(2, WorldSeed + Counter) = 0 then
+      if srand(3, WorldSeed + Counter) = 0 then
         begin
-          Child[i]:= tVoxel.Create(Voxel);
-          {Result+=} Generate(Child[i]);
+          Children[i]:= tVoxel.Create(Voxel);
+          {Result+=} Generate(Children[i]);
         end
       else
         begin
-          Child[eVoxelPos(integer(i) + 4)]:= tVoxel.Create(Voxel);
-          {Result+=} Generate(Child[eVoxelPos(integer(i) + 4)]);
+          Children[eVoxelPos(integer(i) + 4)]:= tVoxel.Create(Voxel);
+          {Result+=} Generate(Children[eVoxelPos(integer(i) + 4)]);
         end;
         inc(Counter);
     end;
@@ -272,7 +316,7 @@ end;
 procedure tWorld.ListVoxel(Voxel: tVoxel; cx, cy, cz: single);   //center of voxel
 var
   i: eVoxelPos;
-  d: single;
+  d: single;                        //убрать рекурсию - self сравнить с адресами родителя
   x, y, z: single;
 begin
   with Voxel do
@@ -283,9 +327,9 @@ begin
       x:= cx;
       y:= cy;
       z:= cz;
-      if Child[i] <> nil then
+      if Children[i] <> nil then
       begin
-        with Child[i] do
+        with Children[i] do
         begin
           case i of
             BNW:
@@ -336,9 +380,19 @@ begin
                // Counter:= integer(i);
               end;
           end;
-          inc(Counter);
+          //inc(Counter);
 
-          //if ListID = 0 then ListID:= Counter;
+          if Order = VoxelFidelity then
+          begin
+            Vertices[counter].x:= x;    //excess
+            Vertices[counter].y:= y;
+            Vertices[counter].z:= z;
+
+            Indices[counter]:= counter;
+            inc(counter);
+          end;
+
+          {//if ListID = 0 then ListID:= Counter;
           //glNewList(ListID, GL_COMPILE_and_execute);
           {if Order < VoxelFidelity then
           begin}
@@ -382,21 +436,18 @@ begin
             //glEnd;
           //glEndList;
 
-          {end;}
+          {end;}   }
         end;
 
-        ListVoxel(Child[i], x - d / 2, y - d / 2, z - d / 2);
+        ListVoxel(Children[i], x - d / 2, y - d / 2, z - d / 2);
       end;
     end;
   end;
 end;
 
 procedure tWorld.PassVoxels;
-var
-  d: single;
-  x, y, z: single;
 begin
-UI3DListID:= glGenLists(1);
+{UI3DListID:= glGenLists(1);
   glNewList(UI3DListID, GL_COMPILE);
     glBegin(GL_LINES);
       glColor3f(0,0,1);
@@ -470,36 +521,29 @@ UI3DListID:= glGenLists(1);
       glVertex3f(x    , y,     z - d);
 
       Counter:= 1;
-      ListVoxel(RootVoxel, 0, 0, 0);
+      ListVoxel(Voxels.RootVoxel, 0, 0, 0);
     glEnd;
-  glEndList;
+  glEndList;  }
 
 
   {glBegin(gl_quads);
 
   glEnd;  }
-end;
 
-procedure tWorld.RenderVoxel(Voxel: tVoxel);
-var
-   i: eVoxelPos;
-begin
-  with Voxel do
-  begin
-    //glCallList(ListID)
-    {if Wireframe then
-    begin
-      if Order  <> VoxelFidelity then
-        glPolygonMode(GL_FRONT, GL_LINE)
-      else
-        glPolygonMode(GL_FRONT, GL_FILL);
-      glCallList(ListID);
-    end
-    else
-      if Order = VoxelFidelity then glCallList(ListID);
-    for i:= BNW to TSE do
-      if Child[i] <> nil then RenderVoxel(Child[i]) }
-  end;
+  //glEnableClientState(GL_VERTEX_ARRAY);
+    Counter:= 0;
+    ListVoxel(Voxels.RootVoxel, 0, 0, 0);
+
+    glGenBuffers(1, @VertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, length(Vertices) * sizeof(rVec3), PGLVoid(Vertices), GL_STATIC_DRAW);
+
+    glGenBuffers(1, @IndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, length(Indices) * sizeof(GLuint), PGLVoid(Indices), GL_STATIC_DRAW);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    //glDisableClientState(GL_VERTEX_ARRAY);
 end;
 
 procedure tWorld.Render;
@@ -513,26 +557,26 @@ begin
 
              //to separate proc
 
-  with CameraDirection do
+  with Camera.o do
   begin
     glRotatef(x,1,0,0);
     glRotatef(y,0,1,0);
     glRotatef(z,0,0,1);
   end;
 
-  with CameraPosition do
+  with Camera.c do
     glTranslatef(x, y, z);
 
-  glEnableClientState(GL_VERTEX_ARRAY);
+  //glEnableClientState(GL_VERTEX_ARRAY);
 
-  glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+  //glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
   glVertexPointer(3, GL_FLOAT, 0, nil);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
   glDrawElements(GL_TRIANGLE_STRIP, length(Indices), GL_UNSIGNED_INT, nil);
  // glMultiDrawElements(GL_TRIANGLE_STRIP, PGLSizei(IndexCount), GL_UNSIGNED_INT, PGLVoid(IndexOffset), length(Indexcount)*length(Indexcount)*sizeof(gluint));
 
-  glDisableClientState(GL_VERTEX_ARRAY);
+  //glDisableClientState(GL_VERTEX_ARRAY);
 
 
   {glMatrixMode(GL_Projection);
@@ -541,7 +585,6 @@ begin
 
   //glCallList(UI3DListID);
   //if WireFrame then glCallList(WireFrameListID);
-  //RenderVoxel(RootVoxel);
 
   //glFlush;
 end;
@@ -549,13 +592,33 @@ end;
 procedure tWorld.Save(FileName: string);
 begin
 
+
+  {if FileExists(FileName) then
+  begin
+    Filestream:= TFileStream.Create(FileName, fmOpenReadWrite);
+    BlockCount:= FileStream.ReadDWord;
+    setlength(BlockSizes, BlockCount);
+    FirstBlock:= sizeof(BlockCount) + BlockCount * sizeof(BlockSizes[0]);
+    FileStream.ReadBuffer(BlockSizes, BlockCount);
+
+    RootVoxel:= LoadBlock(0);
+  end
+  else
+  begin
+    Filestream:= TFileStream.Create(FileName, fmCreate);
+    //Gen new
+  end;}
 end;
 
 destructor tWorld.Destroy;
+var
+  i: integer;
 begin
-  if RootVoxel <> nil then
-    RootVoxel.DestroyRoot;
-  Hubs.Free;
+  WriteLog('Freeing world');
+  Voxels.Destroy;
+  for i:= 0 to high(Hubs) do
+    Hubs[i].Destroy;
+  Camera.Destroy;
 end;
 
 end.

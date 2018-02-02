@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DefaultProfile.xml>
+  <keybindings>
+    <keyb action="aLeft" keyprim="scA"/>
+    <keyb action="aRight" keyprim="scD"/>
+    <keyb action="aForward" keyprim="scW"/>
+    <keyb action="aBackward" keyprim="scS"/>
+    <keyb action="aUpward" keyprim="scSPACE"/>
+    <keyb action="aDownward" keyprim="scLCTRL"/>
+    <keyb action="aPitchDown" keyprim="scR"/>
+    <keyb action="aPitchUp" keyprim="scF"/>
+    <keyb action="aYawLeft" keyprim="scZ"/>
+    <keyb action="aYawRight" keyprim="scX"/>
+    <keyb action="aRollLeft" keyprim="scQ"/>
+    <keyb action="aRollRight" keyprim="scE"/>
+  </keybindings>
+  <graphicssettings>
+    <grs name="xres" value="1000"/>
+    <grs name="yres" value="1000"/>
+  </graphicssettings>
+  <gameplaysettings>
+    <gms name="mousesens" value="0,800000011920929"/>
+  </gameplaysettings>
+</DefaultProfile.xml>
